@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 // declare enums
 typedef enum month {
@@ -88,6 +87,8 @@ int main(void)
         {oct, 1},
         {nov, 30}
     };
+
+    printf("%ld %ld \n", sizeof(dates), sizeof(dates[0]));
 
     for (int i=0; i<sizeof(dates)/sizeof(dates[0]); i++){
         printdate(dates[i]);
