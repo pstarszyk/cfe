@@ -13,9 +13,8 @@ using namespace :: std;
 // }
 
 template <class T>
-inline T sum(T data[], int size)
+inline T sum(T data[], int size, T sm=0)
 {
-    T sm = 0;
     for (int i=0; i<size; i++){
         sm += data[i];
     }
@@ -28,8 +27,8 @@ int main(void)
     int data1[size] = {1, 2, 3, 4, 5};
     double data2[size] = {1.1, 2.2, 3.3, 4.4, 5.5};
 
-    cout << "sum of data1 is " << sum(data1, size) << endl;
-    cout << "sum of data2 is " << sum(data2, size) << endl;
+    cout << "sum of data1 is " << sum(data1, size, 10) << endl;
+    cout << "sum of data2 is " << sum(data2, size, 10.0) << endl;
 
     return 0;
 }
