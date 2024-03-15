@@ -11,7 +11,7 @@ using namespace :: std;
 
 class point{
     public:
-        point(){x = y = 0.0;}
+        point(){this -> x = 0.0; this -> y = 0.0;}
         double getx(){return x;}
         double gety(){return y;}
         void setx(double v){x = v;}
