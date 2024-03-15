@@ -16,12 +16,13 @@ class point{
         double gety(){return y;}
         void setx(double v){x = v;}
         void sety(double v){y = v;}
-    private:
         double x, y;
 };
 
 point operator+ (point& p1, point& p2){
-    point sum = {p1.x + p2.x, p1.y + p2.y};
+    point sum;
+    sum.x = p1.x + p2.x;
+    sum.y = p1.y + p2.y;
     return sum;
 }
 
@@ -32,7 +33,13 @@ ostream& operator<< (ostream& out, const point& p){
 
 int main(void)
 {
-    point a = {1.1, 2.2}, b = {3.3, 4.4}, c;
+    point a, b, c;
+
+    a.x = 1.1;
+    a.y = 2.2;
+    b.x = 3.3;
+    b.y = 4.4;
+
     cout << "a = " << a << "b = " << b << endl;
     cout << "sum = " << a + b << endl;
     return 0;
