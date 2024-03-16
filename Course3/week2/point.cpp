@@ -11,7 +11,7 @@ using namespace :: std;
 
 class point{
     public:
-        point(){this -> x = 0.0; this -> y = 0.0;}
+        point(double x=0.0, double y=0.0): x(x), y(y){}
         double getx(){return x;}
         double gety(){return y;}
         void setx(double v){x = v;}
@@ -20,9 +20,8 @@ class point{
 };
 
 point operator+ (point& p1, point& p2){
-    point sum;
-    sum.x = p1.x + p2.x;
-    sum.y = p1.y + p2.y;
+    point sum(p1.x + p2.x, p1.y + p2.y); // OR point sum = {p1.x + p2.x, p1.y + p2.y}; 
+    // defining sum = (. + ., . + .) would discard the first result and just keep the second.
     return sum;
 }
 
@@ -33,12 +32,7 @@ ostream& operator<< (ostream& out, const point& p){
 
 int main(void)
 {
-    point a, b, c;
-
-    a.x = 1.1;
-    a.y = 2.2;
-    b.x = 3.3;
-    b.y = 4.4;
+    point a=point(1.1, 2.2), b=point(3.3, 4.4), c;
 
     cout << "a = " << a << "b = " << b << endl;
     cout << "sum = " << a + b << endl;
