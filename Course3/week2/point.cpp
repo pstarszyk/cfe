@@ -1,8 +1,8 @@
 #include <iostream>
 using namespace :: std;
 
-// this module shows necessary overloading for our custom data ype "point".
-// there are operators (ie. _, -, <<, ... etc) in the standard library that work 
+// this module shows necessary overloading for our custom data type "point".
+// there are operators (ie. +, -, <<, ... etc) in the standard library that work 
 // out of the box on primitive/native data types (int, char, double, long, etc).
 // But when you create your own custom type, these operators don't know how to 
 // operate on them, therefore you need to override them, so that when you invoke
