@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <limits>
 #include <random>
 using namespace :: std;
 
@@ -41,20 +42,73 @@ public:
         }
         cout << endl;
     }
-    
-    void getSum() {
-        double sm;
+
+    void get_neighbour_data(int node, vector<int>& neighbours, vector<double>& distances) {
         for (int i=0; i<nodes; i++){
-            for (int j=0; j<nodes; j++){
-                sm += graph[i][j];
+            if (graph[node][i] > 0){
+                neighbours.push_back(i);
+                distances.push_back(graph[node][i]);
             }
         }
-        cout << sm << endl;
     }
+
 private:
     int nodes;
     vector<vector<double>> graph;
 };
+
+
+class ShortestPath{
+public:
+    ShortestPath(Graph& graph, int nodes): graph(graph), nodes(nodes),
+        nodes_list(vector<int>(nodes)),
+        visited(vector<int>(nodes, 0)),
+        unvisited(vector<int>(nodes, 1)),
+        previous_node(vector<int>(nodes, -1)),
+        shortest_distance(vector<double>(nodes, numeric_limits<double>::infinity())){
+        iota(nodes_list.begin(), nodes_list.end(), 0);
+    }
+
+    int path(int source, int destination) {
+        // initialize previous_node  withsource because that's where we're starting,
+        // and shortest_distance with 0 because |source - source| = 0.
+        previous_node[source] = source; 
+        shortest_distance[source] = 0;
+
+        // initialize previous visited node and minDist through that node.
+        // initialize unvisited neighbours and their distances.
+        int prev = source;
+        double minDist = 0;
+        vector<int> neighbours;
+        vector<double> distances;
+
+        while (true){
+            // step 1: get unvisited connections of prev.
+            neighbours.clear();
+            distances.clear();
+            graph.get_neighbour_data(prev, neighbours, distances);
+            
+        }  
+
+        
+        // for (size_t i = 0; i < neighbours.size(); ++i) {
+        //     cout << neighbours[i] << " " << distances[i] << " ";
+        // }
+        // cout << endl;
+
+        return 0;
+    }
+
+private:
+    Graph graph;
+    int nodes;
+    vector<int> nodes_list;
+    vector<int> previous_node;
+    vector<int> visited;
+    vector<int> unvisited;
+    vector<double> shortest_distance;
+};
+
 
 
 int main(void)
@@ -65,8 +119,13 @@ int main(void)
 
     Graph g=Graph(nodes);
     g.generateGraph(density, range);
-    g.printGraph();
-    g.getSum();
+    // g.printGraph();
+    // g.getSum();
+
+
+    ShortestPath sp=ShortestPath(g, nodes);
+    sp.path(2,7);
+
     return 0;
 }
 
