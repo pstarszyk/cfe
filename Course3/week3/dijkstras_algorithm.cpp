@@ -4,6 +4,8 @@
 #include <random>
 using namespace :: std;
 
+// References --  this code implements dijkstra's algo as explained in this video:
+// dijkstras algo explained: https://www.youtube.com/watch?v=bZkzH5x0SKU
 
 double randomFloat(double range[]) {
     random_device rd; // Obtain a random number from hardware
@@ -37,7 +39,7 @@ public:
         for (int i=0; i<nodes; i++){
             cout << endl;
             for (int j=0; j<nodes; j++){
-                    cout << " " << graph[i][j] << " ";
+                    cout << graph[i][j] << "\t";
             }
         }
         cout << endl;
@@ -69,7 +71,72 @@ public:
         iota(nodes_list.begin(), nodes_list.end(), 0);
     }
 
-    int path(int source, int destination) {
+    void remove_visited(vector<int>& neighbours, vector<double>& distances) {
+        for (size_t i=0; i<neighbours.size(); i++){
+            int cur = neighbours[i];
+            if (visited[cur] == 1){
+                neighbours[i] = -1;
+                distances[i] = -1;
+            }
+        }
+    }
+
+    void add_distances(double minDist, vector<double>& distances) {
+        for (size_t i=0; i<distances.size(); i++){
+            if (distances[i] != -1){
+                distances[i] += minDist;
+            }
+        }
+    }
+
+    void update_distances(int prev, vector<int>& neighbours, vector<double>& distances) {
+        for (size_t i=0; i<neighbours.size(); i++){
+            if (neighbours[i] != -1 && distances[i] < shortest_distance[neighbours[i]]){
+                shortest_distance[neighbours[i]] = distances[i];
+                previous_node[neighbours[i]] = prev;
+            }
+        }
+    }
+
+    void update_visits(int prev) {
+        visited[prev] = 1;
+        unvisited[prev] = 0;
+    }
+
+    void update_trackers(int& prev, double& minDist, vector<int>& neighbours) {
+        double curMinDist = numeric_limits<double>::infinity();
+        int curMinNeighbour = -1;
+
+        for (size_t i=0; i<neighbours.size(); i++){
+            if (neighbours[i] != -1 && shortest_distance[neighbours[i]] < curMinDist){
+                curMinDist = shortest_distance[neighbours[i]];
+                curMinNeighbour = neighbours[i];
+            }
+        }
+        prev = curMinNeighbour;
+        minDist = curMinDist;
+    }
+
+    bool no_connections(vector<int>& neighbours) {
+        for (size_t i=0; i<neighbours.size(); i++){
+            if (neighbours[i] > -1){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void print_path(int source, int destination) {
+        cout << "Path = ";
+        int nxt = destination;
+        while (nxt != source){
+            cout << nxt << " <- ";
+            nxt = previous_node[nxt];
+        }
+        cout << source << endl;
+    }
+
+    void path(int source, int destination) {
         // initialize previous_node  withsource because that's where we're starting,
         // and shortest_distance with 0 because |source - source| = 0.
         previous_node[source] = source; 
@@ -87,16 +154,31 @@ public:
             neighbours.clear();
             distances.clear();
             graph.get_neighbour_data(prev, neighbours, distances);
-            
-        }  
+            remove_visited(neighbours, distances);
 
-        
-        // for (size_t i = 0; i < neighbours.size(); ++i) {
-        //     cout << neighbours[i] << " " << distances[i] << " ";
-        // }
-        // cout << endl;
+            if (no_connections(neighbours)){
+                cout << "NO SOLUTION!" << endl;
+                break;
+            }
 
-        return 0;
+            // step 2: add minDist to neighbouring distances
+            add_distances(minDist, distances);
+
+            // step 3: update shortest_distance IF distances from step 2 are lower and update previous_node
+            update_distances(prev, neighbours, distances);
+
+            // step 4: updated visited and unvisited.
+            update_visits(prev);
+
+            // step5: update prev and minDist based on minimal distances obtained in step 2
+            update_trackers(prev, minDist, neighbours);
+
+            if (prev == destination){
+                print_path(source, destination);
+                break;
+            }
+        }
+        cout << "MinCost = " << shortest_distance[destination] << endl;  
     }
 
 private:
@@ -114,30 +196,26 @@ private:
 int main(void)
 {
     int nodes = 50;
-    double density = 0.4;
+    double density;
     double range[2] = {1.0, 10.0};
 
-    Graph g=Graph(nodes);
-    g.generateGraph(density, range);
+    // density = 20%
+    density = 0.2;
+
+    Graph g1 = Graph(nodes);
+    g1.generateGraph(density, range);
     // g.printGraph();
-    // g.getSum();
+    ShortestPath sp1 = ShortestPath(g1, nodes);
+    sp1.path(0, 49);
 
+    // density = 40%
+    density = 0.4;
 
-    ShortestPath sp=ShortestPath(g, nodes);
-    sp.path(2,7);
+    Graph g2 = Graph(nodes);
+    g2.generateGraph(density, range);
+    // g.printGraph();
+    ShortestPath sp2 = ShortestPath(g2, nodes);
+    sp2.path(0, 49);
 
     return 0;
 }
-
-// References:
-// dijkstras algo explained: https://www.youtube.com/watch?v=bZkzH5x0SKU
-
-// Learnings:
-// method calls - how similar they are to python. to invoke a method of an object you apply the same pattern: object.method(args)
-// using vector enables you to declare arrays with non-static types -- the size does not need to be known at compile time with vector, whereas with native arrays it does.
-//
-//
-//
-//
-
-
