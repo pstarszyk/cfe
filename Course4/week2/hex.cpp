@@ -6,6 +6,16 @@
 using namespace :: std;
 
 
+inline int random_number(int n)
+{
+    random_device rd;
+    mt19937 eng(rd());
+    uniform_int_distribution<> distr(0, n - 1);
+    int r = distr(eng);
+    return r;
+}
+
+
 class Graph{
 public:
     Graph(int nodes): 
@@ -46,7 +56,25 @@ public:
             graph[dim*(i + 1) + j - 1][dim * i + j] = graph[dim * i + j][dim*(i + 1) + j - 1] = 1;
         }
     }
+    
+    bool has_bridge(void){
+        vector<int> extremes;
+        
+        for (int i=0; i<dim; i++){
+            if (graph[dim*i][dim*i] == 1){extremes.push_back(dim*i);}
+            if (graph[dim*(i+1)-1][dim*(i+1)-1] == 1){extremes.push_back(dim*(i+1)-1);}
+        }
+        for (int j=1; j<dim-1; j++){
+            if (graph[j][j] == 1){extremes.push_back(j);}
+            if (graph[dim*(dim-1) + j][dim*(dim-1) + j] == 1){extremes.push_back(dim*(dim-1) + j);}
+        }
 
+        for (auto node = extremes.begin(); node != extremes.end(); node++){
+            cout << *node << endl;
+        }
+
+        return false;
+    }
 
 private:
     int nodes, dim;
@@ -63,7 +91,9 @@ public:
         nodes(dim * dim),
         player_graph(nodes),
         computer_graph(nodes),
-        colours(nodes, '.'){
+        colours(nodes, '.'),
+        player_status(false),
+        computer_status(false){
         if (player_colour == 'B'){computer_colour = 'R';}
         else {computer_colour = 'B';}
     }
@@ -107,17 +137,14 @@ public:
         else {computer_graph.update_edges(i, j);}
     }
 
-    void computer_move(void){
+    void computer_move(int i, int j){
         vector<int> open_nodes;
         for (int i=0; i<nodes; i++){
             if (colours[i] == '.'){open_nodes.push_back(i);}
         }
 
         // Generate random available node.
-        random_device rd;
-        mt19937 eng(rd());
-        uniform_int_distribution<> distr(0, open_nodes.size() - 1);
-        int index = distr(eng);
+        int index = random_number(open_nodes.size());
         int node = open_nodes[index];
 
         update_colours(node / dim, node % dim, computer_colour); 
@@ -131,9 +158,22 @@ public:
         }
         update_colours(i, j, player_colour);
         update_board(i, j, player_colour);
-        computer_move(); 
+        if (player_graph.has_bridge()){
+            player_status = true;
+            draw_board();
+            return;
+        }
+        computer_move(i, j); 
+        if (computer_graph.has_bridge()){
+            computer_status = true;
+            draw_board();
+            return;
+        }
         draw_board();
+
     }
+
+    bool player_status, computer_status;
 
 private:
     int nodes, dim;
@@ -171,7 +211,16 @@ int main(void)
     while (true){
         cout << "Enter the coordinates of your next move:" << endl;
         cin >> i >> j;
+
         hex.move(i, j);
+        if (hex.player_status){
+            cout << "PLAYER WINS!!!" << endl;
+            break;
+        }
+        if (hex.computer_status){
+            cout << "COMPUTER WINS!!!" << endl;
+            break;
+        }
     }
 
     return 0;
