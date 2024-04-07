@@ -1,10 +1,17 @@
 #include <cmath>
 #include <iostream>
+#include <queue>
 #include <random>
 #include <string>
 #include <vector>
 using namespace :: std;
 
+enum Direction {
+    East,
+    West,
+    North,
+    South
+};
 
 inline int random_number(int n)
 {
@@ -56,9 +63,56 @@ public:
             graph[dim*(i + 1) + j - 1][dim * i + j] = graph[dim * i + j][dim*(i + 1) + j - 1] = 1;
         }
     }
+
+    vector<int> get_connections(int node){
+        // this method checks all of the connections for a given node using breadth-first-search.
+        
+        vector<int> connections(nodes, 0);
+        queue<int> q;
+    
+        q.push(node);
+        connections[nodes] = 1;
+
+        int cur;
+        while (!q.empty()){
+            cur = q.front();
+            q.pop();
+            for (int i=0; i<nodes; i++){
+                if (i != cur && graph[cur][i] == 1 && connections[i] == 0){
+                    connections[i] = 1;
+                    q.push(i);
+                }
+            }
+        }
+        return connections;
+    }
+
+    bool check_connection(vector<int>& connections, Direction direction) {
+        for (int k = 0; k < dim; k++) {
+            int index;
+            switch (direction) {
+                case East:
+                    index = dim*k + dim-1;
+                    break;
+                case West:
+                    index = dim*k;
+                    break;
+                case North:
+                    index = k; // Equivalent to 0 + k
+                    break;
+                case South:
+                    index = dim*(dim-1) + k;
+                    break;
+            }
+            if (connections[index] == 1) {
+                return true;
+            }
+        }
+        return false;
+    }
     
     bool has_bridge(void){
-        vector<int> extremes;
+        vector<int> connections, extremes;
         
         for (int i=0; i<dim; i++){
             if (graph[dim*i][dim*i] == 1){extremes.push_back(dim*i);}
@@ -70,9 +124,43 @@ public:
         }
 
         for (auto node = extremes.begin(); node != extremes.end(); node++){
-            cout << *node << endl;
-        }
+            int i = *node / dim, j = *node % dim;
+            connections = get_connections(*node);
 
+            // check if this current extreme node is connected to another appropriate extreme node.
+            
+            if (i==0 && j==0){ 
+                if (check_connection(connections, East) || check_connection(connections, South)){return true;}
+            }
+
+            if (i==0 && j==dim-1){
+                if (check_connection(connections, West) || check_connection(connections, South)){return true;}
+            }
+
+            if (i==dim-1 && j==0){
+                if (check_connection(connections, East) || check_connection(connections, North)){return true;}
+            }
+
+            if (i==dim-1 && j==dim-1){
+                if (check_connection(connections, West) || check_connection(connections, North)){return true;}
+            }
+
+            if (i==0){
+                if (check_connection(connections, South)){return true;}
+            }
+
+            if (i==dim-1){
+                if (check_connection(connections, North)){return true;}
+            }
+
+            if (j==0){
+                if (check_connection(connections, East)){return true;}
+            }
+
+            if (j==dim-1){
+                if (check_connection(connections, West)){return true;}
+            }
+        }
         return false;
     }
 
