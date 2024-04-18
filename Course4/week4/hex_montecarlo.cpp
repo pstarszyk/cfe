@@ -6,6 +6,8 @@
 #include <vector>
 using namespace :: std;
 
+int trials = 1000;
+
 enum Direction {
     East,
     West,
@@ -13,12 +15,12 @@ enum Direction {
     South
 };
 
-inline int random_number(int n)
+inline double prob(void)
 {
     random_device rd;
-    mt19937 eng(rd());
-    uniform_int_distribution<> distr(0, n - 1);
-    int r = distr(eng);
+    mt19937 gen(rd());
+    uniform_int_distribution<> distr(0.0, 1.0);
+    double r = distr(gen);
     return r;
 }
 
@@ -181,7 +183,8 @@ public:
         computer_graph(nodes),
         colours(nodes, '.'),
         player_status(false),
-        computer_status(false){
+        computer_status(false),
+        rmoves(nodes){
         if (player_colour == 'B'){computer_colour = 'R';}
         else {computer_colour = 'B';}
     }
@@ -225,16 +228,50 @@ public:
         else {computer_graph.update_edges(i, j);}
     }
 
-    void computer_move(int i, int j){
-        vector<int> open_nodes;
+    void populate_colours(vector<char>& current_colours, int pmoves, int cmoves){
+        double p;
+
         for (int i=0; i<nodes; i++){
-            if (colours[i] == '.'){open_nodes.push_back(i);}
+            if (current_colours[i] == '.'){
+                if (pmoves == 0){current_colours[i] = computer_colour;}
+                else if (cmoves == 0){current_colours[i] = player_colour;}
+                else {
+                    p = prob();
+                    if (p < 0.5){current_colours[i] = computer_colour; cmoves--;}
+                    else {current_colours[i] = player_colour; pmoves--;}            
+                }
+            }
         }
+    }
 
-        // Generate random available node.
-        int index = random_number(open_nodes.size());
-        int node = open_nodes[index];
+    double win_rate(int node){
+        Graph pgraph(nodes), cgraph(nodes);
+        vector<char> current_colours(nodes);
+        int pmoves = (rmoves-1)/2 + (rmoves-1)%2, cmoves = (rmoves-1)/2;
 
+        for (int i=0; i<trials; i++){
+            current_colours = colours;
+            current_colours[node] = computer_colour;            
+            
+            // populate colours
+            populate_colours(current_colours, pmoves, cmoves);
+        }
+    }
+
+    int generate_move(void){
+        vector<double> win_rates(nodes, 0);
+        for (int i=0; i<nodes; i++){
+            if (colours[i] == '.'){
+                win_rates[i] = win_rate(i);
+            }
+        }
+        double max_winrate = max_element(win_rates.begin(), win_rates.end());
+        int node = distance(win_rates.begin(), max_winrate);
+        return node;
+    }
+
+    void computer_move(int i, int j){
+        int node = generate_move();
         update_colours(node / dim, node % dim, computer_colour); 
         update_board(node / dim, node % dim, computer_colour);
     }
@@ -246,12 +283,14 @@ public:
         }
         update_colours(i, j, player_colour);
         update_board(i, j, player_colour);
+        rmoves -= 1;
         if (player_graph.has_bridge()){
             player_status = true;
             draw_board();
             return;
         }
-        computer_move(i, j); 
+        computer_move(i, j);
+        rmoves -= 1; 
         if (computer_graph.has_bridge()){
             computer_status = true;
             draw_board();
@@ -264,7 +303,7 @@ public:
     bool player_status, computer_status;
 
 private:
-    int nodes, dim;
+    int nodes, dim, rmoves;
     char player_colour, computer_colour;
     Graph player_graph, computer_graph;
     vector<char> colours;
