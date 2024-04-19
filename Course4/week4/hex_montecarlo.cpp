@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <queue>
@@ -6,7 +8,7 @@
 #include <vector>
 using namespace :: std;
 
-int trials = 1000;
+int trials = 250;
 
 enum Direction {
     East,
@@ -126,7 +128,7 @@ public:
         }
 
         for (auto node = extremes.begin(); node != extremes.end(); node++){
-            int i = *node / dim, j = *node % dim;
+            int i = *node / dim, j = *node % dim; 
             connections = get_connections(*node);
 
             // check if this current extreme node is connected to another appropriate extreme node.
@@ -166,6 +168,14 @@ public:
         return false;
     }
 
+    void reset(void){
+        for (int i=0; i<nodes; i++){
+            for (int j=0; j<nodes; j++){
+                graph[i][j] = 0;
+            }
+        }
+    }
+
 private:
     int nodes, dim;
     vector<vector<int>> graph;
@@ -181,6 +191,8 @@ public:
         nodes(dim * dim),
         player_graph(nodes),
         computer_graph(nodes),
+        pgraph(nodes), 
+        cgraph(nodes),
         colours(nodes, '.'),
         player_status(false),
         computer_status(false),
@@ -223,9 +235,9 @@ public:
         colours[dim * i + j] = c;
     }
 
-    void update_board(int i, int j, char c){
-        if (c == 'B'){player_graph.update_edges(i, j);}
-        else {computer_graph.update_edges(i, j);}
+    void update_board(int i, int j, char c, Graph& pgraph, Graph& cgraph){
+        if (c == player_colour){pgraph.update_edges(i, j);}
+        else {cgraph.update_edges(i, j);}
     }
 
     void populate_colours(vector<char>& current_colours, int pmoves, int cmoves){
@@ -244,18 +256,39 @@ public:
         }
     }
 
+    void populate_graphs(vector<char>& current_colours, Graph& pgraph, Graph& cgraph){
+        int i, j;
+        
+        // reset graphs
+        pgraph.reset();
+        cgraph.reset();
+
+        for (int n=0; n<nodes; n++){
+            i = n / dim, j = n % dim;
+            if (current_colours[n] == computer_colour){update_board(i, j, computer_colour, pgraph, cgraph);}
+            else {update_board(i, j, player_colour, pgraph, cgraph);}
+        }
+    }
+
     double win_rate(int node){
-        Graph pgraph(nodes), cgraph(nodes);
         vector<char> current_colours(nodes);
         int pmoves = (rmoves-1)/2 + (rmoves-1)%2, cmoves = (rmoves-1)/2;
+        double wins = 0;
 
         for (int i=0; i<trials; i++){
             current_colours = colours;
             current_colours[node] = computer_colour;            
-            
+
             // populate colours
             populate_colours(current_colours, pmoves, cmoves);
+
+            // populate graphs
+            populate_graphs(current_colours, pgraph, cgraph);
+
+            // check if computer won
+            if (cgraph.has_bridge()){wins++;}      
         }
+        return wins / trials;
     }
 
     int generate_move(void){
@@ -265,7 +298,7 @@ public:
                 win_rates[i] = win_rate(i);
             }
         }
-        double max_winrate = max_element(win_rates.begin(), win_rates.end());
+        auto max_winrate = max_element(win_rates.begin(), win_rates.end());
         int node = distance(win_rates.begin(), max_winrate);
         return node;
     }
@@ -273,7 +306,7 @@ public:
     void computer_move(int i, int j){
         int node = generate_move();
         update_colours(node / dim, node % dim, computer_colour); 
-        update_board(node / dim, node % dim, computer_colour);
+        update_board(node / dim, node % dim, computer_colour, player_graph, computer_graph);
     }
 
     void move(int i, int j){
@@ -282,15 +315,15 @@ public:
             return;
         }
         update_colours(i, j, player_colour);
-        update_board(i, j, player_colour);
-        rmoves -= 1;
+        update_board(i, j, player_colour, player_graph, computer_graph);
+        rmoves--;
         if (player_graph.has_bridge()){
             player_status = true;
             draw_board();
             return;
         }
         computer_move(i, j);
-        rmoves -= 1; 
+        rmoves--; 
         if (computer_graph.has_bridge()){
             computer_status = true;
             draw_board();
@@ -305,7 +338,7 @@ public:
 private:
     int nodes, dim, rmoves;
     char player_colour, computer_colour;
-    Graph player_graph, computer_graph;
+    Graph player_graph, computer_graph, pgraph, cgraph;
     vector<char> colours;
 };
 
