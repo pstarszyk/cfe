@@ -220,9 +220,9 @@ public:
         colours[dim * i + j] = c;
     }
 
-    void update_board(int i, int j, char c){
-        if (c == 'B'){player_graph.update_edges(i, j);}
-        else {computer_graph.update_edges(i, j);}
+    void update_board(int i, int j, char c, Graph& pgraph, Graph& cgraph){
+        if (c == player_colour){pgraph.update_edges(i, j);}
+        else {cgraph.update_edges(i, j);}
     }
 
     void computer_move(int i, int j){
@@ -236,7 +236,7 @@ public:
         int node = open_nodes[index];
 
         update_colours(node / dim, node % dim, computer_colour); 
-        update_board(node / dim, node % dim, computer_colour);
+        update_board(node / dim, node % dim, computer_colour, player_graph, computer_graph);
     }
 
     void move(int i, int j){
@@ -245,7 +245,7 @@ public:
             return;
         }
         update_colours(i, j, player_colour);
-        update_board(i, j, player_colour);
+        update_board(i, j, player_colour, player_graph, computer_graph);
         if (player_graph.has_bridge()){
             player_status = true;
             draw_board();
